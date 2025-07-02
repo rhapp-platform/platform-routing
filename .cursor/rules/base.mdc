@@ -1,0 +1,8 @@
+---
+description: Base /Users/glenn/xpertana/app-snippets Overview
+globs: *
+alwaysApply: true
+---
+<!-- Content -->
+## Purpose
+- this directory is part of the Rhappsody Platform monorepo

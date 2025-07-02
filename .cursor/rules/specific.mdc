@@ -1,0 +1,36 @@
+---
+description: Specific Cursor Rules
+globs: *
+alwaysApply: true
+---
+<!-- Content -->
+## Purpose
+- this dir contains a set of standalone function that implement Cloudflare snippets for the `rhapp.app` domain/zone
+- see the official documentation of snippets at: https://developers.cloudflare.com/rules/snippets/
+
+- any file typescript file in this directory that starts with `serve_` describes a snippet
+
+
+
+<cli-tools>
+cfsnip : a custom tools used to manage snippets
+</clitools>
+
+```
+cfsnip -h
+cfsnip [command]
+
+Commands:
+  cfsnip list             list all the snippets                        [default]
+  cfsnip get <snippet>    get snippet source
+  cfsnip deploy <file>    deploy a snippet                          [aliases: d]
+  cfsnip rules <snippet>  list rules for a snippet                  [aliases: r]
+  cfsnip rm <snippet>     delete a snippet
+
+Options:
+      --version  Show version number                                   [boolean]
+  -d, --details  show details                                          [boolean]
+  -h, --help     Show help                                             [boolean]
+```
+
+

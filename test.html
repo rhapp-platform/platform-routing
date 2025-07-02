@@ -1,0 +1,42 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUB</title>
+    <link rel="stylesheet" href="https://r.rhap.cc/latest/rh.css?latest">
+    <script src="https://r.rhap.cc/latest/rhappsody-x.js?latest"></script>
+    <script defer
+        src="https://pub-enam.rhap.cc/7f8c37cb-118b-44f7-814c-0332b392808f/d8767b9f-ad5c-4bae-845e-53440548c468/app.js"></script>
+    <script type="module">
+        const ag = "bob"
+        const an = "main"
+        window.RHCTX = {
+            account: "7f8c37cb-118b-44f7-814c-0332b392808f",
+            aid: "d8767b9f-ad5c-4bae-845e-53440548c468",
+            reg: "enam",
+            pl: "en",
+            color: "blue",
+            version: 2,
+        }
+        console.log(window.RHCTX);
+        const appBin = localStorage.getItem(`${window.RHCTX.account}-${window.RHCTX.aid}-app.rhbin`);
+        console.log({localappBin: appBin});
+
+        // const R = await fetch(`https://pub-${window.RHCTX.reg}.rhap.cc/${window.RHCTX.account}/${window.RHCTX.aid}/app.rhbin`, {
+        //     method: 'GET',
+        //     credentials: 'include',
+        //     headers: {
+        //         "Content-Type": "application/json"
+        //     }
+        // });
+        // console.log({R});
+    </script>
+</head>
+
+<body>
+    <h1>TEST</h1>
+    <a href="https://test.rh.local/app-snippets/test.html">TEST</a>
+</body>
+
+</html>

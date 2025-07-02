@@ -1,0 +1,11 @@
+Update package name and description to reflect platform-routing rename
+
+- Change package.json name from app-snippets to platform-routing
+- Update README.md title and description to clarify this is platform routing infrastructure
+- Better reflects the critical nature of this component
+
+Part of broader rename from generic 'app-snippets' to descriptive 'platform-routing'.
+
+🤖 Generated with Claude Code
+
+Co-Authored-By: Claude <noreply@anthropic.com>
