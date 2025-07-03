@@ -13,7 +13,7 @@ interface RenderAppProps {
   version: string;
 }
 
-import genSessionToken from "./genSessionToken";
+import genContextToken from "./genContextToken";
 
 export default async function renderApp({
   ag,
@@ -28,7 +28,7 @@ export default async function renderApp({
   b64,
   startBlock,
 }: RenderAppProps) {
-  const { sessionToken, sid } = await genSessionToken({
+  const { contextToken, sid } = await genContextToken({
     ag,
     an,
     aid,
@@ -92,7 +92,7 @@ export default async function renderApp({
       }
     </script>
   </head>
-<body class="light" data-rh-session-token="${sessionToken}"></body>
+<body class="light" data-rh-context-token="${contextToken}"></body>
 </html>
   `;
 }
