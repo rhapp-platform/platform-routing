@@ -29,6 +29,8 @@ export default async function genContextToken({
   reg = "enam",
 }: GenContextToken): Promise<{ contextToken: string; sid: string }> {
   const sid = crypto.randomUUID();
+  const nonce = crypto.randomUUID(); // Unique nonce for replay attack prevention
+  
   const payload = {
     sid: sid,
     ag: ag,
@@ -36,6 +38,7 @@ export default async function genContextToken({
     aid: aid,
     pl: pl,
     reg: reg,
+    nonce: nonce, // Future-proof: nonce for replay prevention (validation optional)
     exp: Math.floor(Date.now() / 1000) + 60 * 60 * 8, // Token expires in 8 hours
   };
   const contextToken = createSimpleToken(payload, RH_CONTEXT_JWT_SECRET);
