@@ -1,4 +1,4 @@
-import renderApp from "./renderApp2";
+import renderApp from "./renderApp";
 import renderLiveIn from "./renderLiveIn";
 import renderExpired from "./renderExpired";
 import renderManifest from "./renderManifest";

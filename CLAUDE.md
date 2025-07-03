@@ -19,7 +19,7 @@ This is the **Cloudflare Snippets-based** routing system that:
 
 ### Critical Core Files
 - `src/serve_app.ts` - **SUPER CRITICAL**: Main app serving logic that handles ALL platform requests
-- `src/renderApp2.ts` - Application rendering logic
+- `src/renderApp.ts` - Application rendering logic
 - `src/set_rh_ctx.ts` - Rhappsody context management
 
 ### Supporting Components
