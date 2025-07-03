@@ -65,6 +65,14 @@ export default {
     }
 
     // ──────────────────────────────────────
+    // release → release.rhapp.cc (R2 releases)
+    // ──────────────────────────────────────
+    if (an === "release") {
+      const releasePath = url.pathname.replace("/release/", "");
+      return fetch(`https://release.rhapp.cc/${releasePath}`);
+    }
+
+    // ──────────────────────────────────────
     // _doc (docs) → doc.rhap.cc
     // ──────────────────────────────────────
     if (an === "_doc") {
@@ -91,19 +99,16 @@ export default {
     }
 
     // ──────────────────────────────────────
-    // Static Files
-    // • rh.ico
-    // • sw.js  
-    // • _rhapp.js
+    // Static File Proxying (fetched from external sources)
+    // • rh.ico → Supabase storage
+    // • sw.js → release.rhapp.cc (must be root-level for full domain scope)
     // ──────────────────────────────────────
     if (an === "rh.ico")
       return fetch(
         `https://sb.rhap.cc/storage/v1/object/public/apps/_system/ico/blue.ico`
       );
     if (an === "sw.js")
-      return fetch(`https://app-sidecar.rhappsody.cloud/sw.js`);
-    if (an === "_rhapp.js") 
-      return fetch(`${SBS_BASE}/${ag}/_rhapp.js`);
+      return fetch(`https://release.rhapp.cc/sw.js`);
 
 
     // ──────────────────────────────────────
