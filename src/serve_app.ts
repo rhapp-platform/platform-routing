@@ -2,11 +2,15 @@ import renderApp from "./renderApp2";
 import renderLiveIn from "./renderLiveIn";
 import renderExpired from "./renderExpired";
 import renderManifest from "./renderManifest";
+import render404 from "./render404";
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// CONSTANTS AND CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
 
 const CFN_SHARED_SECRET = "rush64counter648hua26gxitrocks";
 const SBS_BASE = "https://sb.rhap.cc/storage/v1/object/public/apps";
 const CTX_BASE = "https://ctx.rhap.cc";
-
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,57 +18,67 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-// Function to convert ArrayBuffer to Base64
-// Function to convert ArrayBuffer to Base64
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════════════════════════
+
 function arrayBufferToBase64(buffer) {
   let binary = "";
-  const bytes = new Uint8Array(buffer); // Create a byte array from the buffer
+  const bytes = new Uint8Array(buffer);
   const len = bytes.byteLength;
 
-  // Iterate through each byte and build a binary string
   for (let i = 0; i < len; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  // Encode the binary string to Base64
   return btoa(binary);
 }
 
 export default {
   async fetch(request) {
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    // PARSE URL COMPONENTS
+    // • ag = hostname.split(".")[0]  (e.g., "bob" from bob.rhapp.app)
+    // • [an, sidecar, block, other] = pathname.split("/")
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    
     const url = new URL(request.url);
     const ag = url.hostname.split(".")[0];
     const [, an, sidecar, block, other] = url.pathname.split("/");
 
-    // allow Cloudflare Font Optimation to work for everying
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    // LEVEL 1: SPECIAL SYSTEM ROUTES
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    
+    // ──────────────────────────────────────
+    // cf-fonts → Cloudflare Font Optimization proxy
+    // ──────────────────────────────────────
     if (an === "cf-fonts") {
-      // return new Response("cf-fonts here");
       return fetch(request);
     }
 
-    // Runtime local path
+    // ──────────────────────────────────────
+    // _ (runtime) → rh.rhap.cc
+    // ──────────────────────────────────────
     if (an === "_") {
-      // strip /ops/ from the pathname
       const rhPath = url.pathname.replace("/_/", "");
-      // return new Response(rhPath);
       return fetch(`https://rh.rhap.cc/${rhPath}`);
     }
 
-    // Runtime local path
-    if (an === "_op") {
-      // strip /ops/ from the pathname
-      const opsPath = url.pathname.replace("/_op/", "");
-      return fetch(`https://op.rhap.cc/${opsPath}`);
-    }
-
-    // Runtime local path
+    // ──────────────────────────────────────
+    // _doc (docs) → doc.rhap.cc
+    // ──────────────────────────────────────
     if (an === "_doc") {
-      // strip /ops/ from the pathname
       const docPath = url.pathname.replace("/_doc/", "");
       return fetch(`https://doc.rhap.cc/${docPath}`);
     }
 
-    // MANIFEST START
-    // if we have https://<ag>.rhapp.app/<an>/manifest, serve that
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    // LEVEL 2: APP GROUP (AG) LEVEL ROUTES
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    
+    // ──────────────────────────────────────
+    // /manifest → JSON response
+    // ──────────────────────────────────────
     if (url.pathname.endsWith("/manifest")) {
       return new Response(
         JSON.stringify(renderManifest({ ag, an, name: an, color: "blue" })),
@@ -75,53 +89,28 @@ export default {
         }
       );
     }
-    // MANIFEST END
 
-    // HANDLE IMAGES at AG level: https://<ag>.rhapp.app/_img/<sidecar>/<block>
-    // HANDLE IMAGES at AG level: https://<ag>.rhapp.app/_img/<tag>/<variant>
-    if (an === "_img") {
-      const variant = block ? block : "orig";
-      const builtIn = await fetch(
-        `https://sb.rhap.cc/storage/v1/object/public/apps/${ag}/_img/${sidecar}/${variant}.png`
-      );
-      return builtIn;
-    }
-    // END HANDLE IMAGES
-
-    // HANDLE SYSTEM ASSETS at AG level: https://<ag>.rhapp.app/_assets/<sidecar>/<block>
-    // HANDLE SYSTEM ASSETS at AG level: https://<ag>.rhapp.app/_assets/<tag>/<variant>
-    // "sidecar" is the folder name, "block" is the actual asset name WITH extension included!!!!
-    if (an === "_assets") {
-      const builtIn = await fetch(
-        `https://sb.rhap.cc/storage/v1/object/public/apps/_system/${sidecar}/${block}`
-      );
-      return builtIn;
-    }
-    // END HANDLE IMAGES
-    // HANDLE SPECIAL STATIC FILES
+    // ──────────────────────────────────────
+    // Static Files
+    // • rh.ico
+    // • sw.js  
+    // • _rhapp.js
+    // ──────────────────────────────────────
     if (an === "rh.ico")
       return fetch(
         `https://sb.rhap.cc/storage/v1/object/public/apps/_system/ico/blue.ico`
       );
     if (an === "sw.js")
       return fetch(`https://app-sidecar.rhappsody.cloud/sw.js`);
+    if (an === "_rhapp.js") 
+      return fetch(`${SBS_BASE}/${ag}/_rhapp.js`);
 
-    if (an === "_rhapp.js") return fetch(`${SBS_BASE}/${ag}/_rhapp.js`);
-    // END HANDLE SPECIAL STATIC FILES
 
-    if (an === "_ai") {
-      // Strip off first segment of pathname
-      const pathParts = url.pathname.split("/");
-      pathParts.shift(); // Remove empty first element from leading slash
-      pathParts.shift(); // Remove _ai segment
-      const aiPath = pathParts.join("/");
-      return fetch(`https://ai.rhap.cc/${aiPath}`);
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////   **********  HANDLE SPECIAL "AN" NAMES  //////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // HANDLE AG level SPECIAL "AN" NAMES
+    // ──────────────────────────────────────
+    // Special AN Names → app-sidecar.rhappsody.cloud/<an>/
+    // account, apps, auth, claim, create, dashboard, groups,
+    // images, users, new, signup, used, visits
+    // ──────────────────────────────────────
     const validSpecialAnNames = [
       "account",
       "apps",
@@ -142,14 +131,11 @@ export default {
       return fetch(`https://app-sidecar.rhappsody.cloud/${an}/${SC}`);
     }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////   **********  CFN CALLs AT AG LEVEL  /////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // HANDLE AG SPECIFIC CFN CALLS: https://<ag>.rhapp.app/fn/<cfnname>
+    // ──────────────────────────────────────
+    // fn (CFN calls) → cfn-*.xpes.workers.dev
+    // https://<ag>.rhapp.app/fn/<cfnname>
+    // ──────────────────────────────────────
     if (an === "fn") {
-      // handle ag specific cfn calls:
-      //http://<ag>.rhapp.app/fn/<cfnname>
-      // NOTE: BODY PASSTHRU now enabled!
       const modifiedUrl = new URL(`https://cfn-${sidecar}.xpes.workers.dev`);
       // Copy existing query parameters from the original URL
       for (const [key, value] of url.searchParams) {
@@ -173,14 +159,11 @@ export default {
     }
 
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////   **********  ACTION CALLs AT AG LEVEL  /////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    // HANDLE AG SPECIFIC CFN CALLS: https://<ag>.rhapp.app/fn/<cfnname>
+    // ──────────────────────────────────────
+    // rha (actions) → rha-*.xpes.workers.dev
+    // https://<ag>.rhapp.app/rha/<action>
+    // ──────────────────────────────────────
     if (an === "rha") {
-      // handle ag specific cfn calls:
-      //http://<ag>.rhapp.app/fn/<cfnname>
-      // NOTE: BODY PASSTHRU now enabled!
       const modifiedUrl = new URL(`https://rha-${sidecar}.xpes.workers.dev`);
       // Copy existing query parameters from the original URL
       for (const [key, value] of url.searchParams) {
@@ -203,15 +186,18 @@ export default {
       return fetch(modifiedRequest);
     }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////******* PARSE APP SERVING QUERY    ////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    // QUERY PARAMETER PARSING
+    // • ?latest    → Forces latest version (adds timestamp)
+    // • ?preview   → Preview mode (requires pl >= 10)
+    // • ?oldversion → Uses previous.rhbin instead of app.rhbin
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    
     const hasLatest = url.searchParams.has("latest")
       ? `?latest&ts=${Date.now()}`
       : "";
     const hasPreview = url.searchParams.has("preview");
     const hasOldversion = url.searchParams.has("oldversion");
-    // END PARSE QUERY PARAMS
 
     const appFilename = hasPreview
       ? "preview.rhbin"
@@ -219,36 +205,47 @@ export default {
       ? "previous.rhbin"
       : "app.rhbin";
 
-    //https:fly.storage.tigris.dev/pub.rhapp.net/bob/derp2/app.html
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////******* FETCH CTX/APPBIN    ////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    // LEVEL 3: FETCH APP CONTEXT (CTX)
+    // Fetch: https://ctx.rhap.cc/<ag>/<an>/app.ctx
+    // → If 404: Return "app not found"
+    // → Extract context from Content-Type header
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    
     const appBin = await fetch(`${CTX_BASE}/${ag}/${an}/app.ctx`);
-    // HANDLE APP NOT FOUND SCENARIO START
-    if (!appBin.ok)
-      return new Response(`app! @${ag}/${an} not found here....`, {
+    
+    if (!appBin.ok) {
+      return new Response(render404({ ag, an }), {
         status: 404,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+        },
       });
-    // return fetch(`https://app-sidecar.rhappsody.cloud/dne/index.html?latest`);
-    // HANDLE APP NOT FOUND SCENARIO END
+    }
+    
     const b64 = await appBin.text();
-    // const b64 = arrayBufferToBase64(arrayBuffer);
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////******* GET CONTEXT FROM CONTENT-TYPE    ////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    // ──────────────────────────────────────
+    // Extract context from Content-Type header:
+    // • account, aid, brand, color, lang, name
+    // • sysStatus, status, version, pl, reg, exp, nbf
+    // ──────────────────────────────────────
     const CT = appBin.headers.get("Content-Type");
     const [_a, _x, account, aid, rest, brand, color, lang, name] =
       CT.split("/");
     const [sysStatus, status, version, pl, reg, exp, nbf] = rest.split("-");
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    ///////////////////////////******* APP LEVEL SIDECAR (NEEDS CONTEXT SO IT IS HERE)   ///////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-    let startBlock = "start"; // define this here becasue "go" case below needs it
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    // LEVEL 4: APP-LEVEL SIDECAR ROUTES
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    
+    let startBlock = "start"; // Default start block, can be overridden by /go/<block>
 
     if (sidecar) {
       switch (sidecar) {
+        // ──────────────────────────────────────
+        // _ctx → JSON context
+        // ──────────────────────────────────────
         case "_ctx":
           return new Response(
             JSON.stringify({
@@ -275,6 +272,9 @@ export default {
               },
             }
           );
+        // ──────────────────────────────────────
+        // icon/banner/social → Supabase storage
+        // ──────────────────────────────────────
         case "icon":
           const iconPath = `https://sb.rhap.cc/storage/v1/object/public/apps/${account}/${aid}/app-icon.png`;
           return fetch(iconPath);
@@ -285,6 +285,9 @@ export default {
           const socialPath = `https://sb.rhap.cc/storage/v1/object/public/apps/${account}/${aid}/social.png`;
           return fetch(socialPath);
 
+        // ──────────────────────────────────────
+        // rhapp.js → app.js from R2
+        // ──────────────────────────────────────
         case "rhapp.js":
           const appBinPath = `https://pub-${reg}.rhap.cc/${account}/${aid}/app.js`;
           const appBin = await fetch(appBinPath);
@@ -299,12 +302,10 @@ export default {
               ...appBin.headers,
             },
           });
-        // return new Response(appBin, {
-        //   headers: corsHeaders,
-        // });
+        // ──────────────────────────────────────
+        // rha/<action> → rha-*.xpes.workers.dev + context
+        // ──────────────────────────────────────
         case "rha":
-          // handle an specific action calls:
-          // https://<ag>.rhapp.app/rha/<cfnname>/<an>
 
           try {
             // const modifiedUrl44 = new URL(
@@ -355,9 +356,10 @@ export default {
           }
           break;
 
+        // ──────────────────────────────────────
+        // fn/<cfn> → cfn-*.xpes.workers.dev
+        // ──────────────────────────────────────
         case "fn":
-          // handle an specific cfn calls:
-          // https://<ag>.rhapp.app/<an>/fn/<cfnname>
 
           try {
             // const modifiedUrl44 = new URL(
@@ -408,8 +410,10 @@ export default {
           }
           break;
 
+        // ──────────────────────────────────────
+        // go/<block> → Set custom start block
+        // ──────────────────────────────────────
         case "go":
-          // this is a block name overide of start - https://<ag>.rhapp.app/<an>/go/<block>
           startBlock = block;
           break;
         case "manifest":
@@ -421,8 +425,10 @@ export default {
             `https://sb.rhap.cc/storage/v1/object/public/apps/${ag}/${an}/app-icon.png`
           );
 
+        // ──────────────────────────────────────
+        // as → serve-as functionality
+        // ──────────────────────────────────────
         case "as":
-          // Get password from query params if present
           const pw = url.searchParams.get("pw");
           const role = url.searchParams.get("role");
           const base = other
@@ -435,21 +441,17 @@ export default {
             method: request.method,
           });
           break;
-        // app image...in R2....
+        // ──────────────────────────────────────
+        // img/<name> → R2 images
+        // ──────────────────────────────────────
         case "img":
           return fetch(`https://pub-${reg}.rhappsody.cloud/${account}/${aid}/images/${block}.png`);
-          // const variant = other ? other : "orig";
-          // const builtIn = await fetch(
-          //   `https://sb.rhap.cc/storage/v1/object/public/apps/${ag}/${an}/img/${block}/${variant}.png`
-          // );
-          // if (builtIn.ok) {
-          //   return builtIn;
-          // } else {
-          //   return fetch(
-          //     `https://sb.rhap.cc/storage/v1/object/public/system-public/images/${block}_default.png`
-          //   );
-          // }
-        //   break;
+        // ──────────────────────────────────────
+        // Sidecar Pages → app-sidecar.rhappsody.cloud/<sidecar>/<block>.html
+        // is, app, source, data, edit, images, assets, overview, users,
+        // share, install, info, profile, admin, login, inbox, splash,
+        // plugins, publish, contact, _dev, help, ask, chat, blog, files
+        // ──────────────────────────────────────
         case "is":
         case "app":
         case "source":
@@ -464,7 +466,6 @@ export default {
         case "info":
         case "profile":
         case "admin":
-        // case "preview": -- needs work....
         case "login":
         case "inbox":
         case "splash":
@@ -496,23 +497,30 @@ export default {
       }
     }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////   **********  SERVING APP********** /////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    // LEVEL 5: APP STATUS & ACCESS CHECKS
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    
+    // ──────────────────────────────────────
+    // 1. System Status Check
+    // sysStatus !== 0 → Return error
+    // ──────────────────────────────────────
+    if (sysStatus !== "0") 
+      return new Response(`sysStatus = ${sysStatus}`);
 
-    // SUSPENDED OR OVER QUOTA START!
-    if (sysStatus !== "0") return new Response(`sysStatus = ${sysStatus}`);
-    // return fetch(`https://app-sidecar.rhappsody.cloud/is/suspended.html`);
-    // SUSPENDED OR OVER QUOTA END!
+    // ──────────────────────────────────────
+    // 2. App Status Check  
+    // status === 1 → Inactive/Password protected
+    // ──────────────────────────────────────
+    if (status === "1") 
+      return new Response(`inactive status = ${status}`);
 
-    // APP IS SET TO IN
-    if (status === "1") return new Response(`inactive status = ${status}`);
-    // return fetch(`https://app-sidecar.rhappsody.cloud/is/suspended.html`);
-    // SUSPENDED OR OVER QUOTA END!
-
-    // PREVIEW APP START   ?preview
+    // ──────────────────────────────────────
+    // 3. Preview Mode Check (?preview)
+    // pl < 10 → Not supported
+    // Otherwise → app-sidecar.rhappsody.cloud/preview/
+    // ──────────────────────────────────────
     if (hasPreview) {
-      // if the app is not supported on the plan, serve the notsupported.html page
       if (Number(pl) < 10)
         return fetch(
           `https://app-sidecar.rhappsody.cloud/preview/notsupported.html`
@@ -529,12 +537,16 @@ export default {
         headers: newH,
       });
     }
-    // PREVIEW APP END
 
-    // EXPIRED AND GOLIVE CHECK FOR NON-PREVIEW APPS
+    // ──────────────────────────────────────
+    // 4. Time-Based Access (non-preview only)
+    // nbf check → If not live yet → renderLiveIn()
+    // exp check → If expired → renderExpired() [commented out]
+    // ──────────────────────────────────────
     if (!hasPreview) {
-      // LIVEIN APP CHECK
       const now = Date.now();
+      
+      // Check if app is not yet live (nbf = not before)
       if (nbf !== "0" && nbf !== "null") {
         if (now < Number(nbf)) {
           return new Response(renderLiveIn(nbf), {
@@ -544,8 +556,8 @@ export default {
           });
         }
       }
-      // LIVEIN APP CHECK END
-      // EXPIRED APP CHECK
+      
+      // Check if app has expired (currently commented out)
       // if (exp !== "0") {
       //   if (now > Number(exp)) {
       //     return new Response(renderExpired({ exp, lang }), {
@@ -556,11 +568,12 @@ export default {
       //     });
       //   }
       // }
-      // EXPIRED APP CHECK END
     }
-    // EXPIRED AND GOLIVE CHECK FOR NON-PREVIEW APPS END
 
-    // PASSWORD PROTECTED APP START!
+    // ──────────────────────────────────────
+    // Password Protected App Check
+    // status === 1 → serve-app-as.xpes.workers.dev/protected
+    // ──────────────────────────────────────
     if (status === "1") {
       const pw = url.searchParams.get("pw");
       const base = `https://serve-app-as.xpes.workers.dev/protected`;
@@ -571,46 +584,22 @@ export default {
       });
     }
 
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////   CLEAR TO SERVE/////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-
-    // STUB START
-    // return new Response(
-    //   `<html lang="en"><head>
-    //     <meta charset="UTF-8">
-    //     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    //     <title>STUB</title>
-    //     <link rel="stylesheet" href="https://r.rhap.cc/latest/rh.css?latest">
-    //     <script src="https://r.rhap.cc/latest/rhappsody-x.js?latest"></script>
-    //     <script src="/${an}/rhapp.js?latest"></script>
-    // </head>
-    // <body>
-    // <h1>${aid}</h1>
-    // </body>
-    //       </html>`,
-    //   {
-    //     headers: {
-    //       "Content-Type": "text/html; charset=utf-8",
-    //     },
-    //   }
-    // );
-    // STUB END
-    // RENDER APP START
-
-    // const b64 = "1234567890";
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
+    // LEVEL 6: RENDER APPLICATION
+    // All checks passed - render the app
+    // ═══════════════════════════════════════════════════════════════════════════════════════════
 
     const html = await renderApp({
-      ag,
-      an,
-      aid,
-      reg,
-      pl,
-      color,
-      lang,
-      b64,
-      startBlock,
-      version,
+      ag,         // app group
+      an,         // app name
+      aid,        // app id
+      reg,        // region
+      pl,         // plan level
+      color,      // theme color
+      lang,       // language
+      b64,        // base64 app binary
+      startBlock, // starting block (default: "start", override with /go/<block>)
+      version     // app version
     });
 
     return new Response(html, {
@@ -618,6 +607,5 @@ export default {
         "Content-Type": "text/html; charset=utf-8",
       },
     });
-    // RENDER APP END
   },
 };

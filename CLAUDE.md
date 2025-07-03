@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Repository Overview
 
-This is the Cloudflare Workers-based routing system that:
+This is the **Cloudflare Snippets-based** routing system that:
 - Handles all incoming requests to `*.rhapp.app` domains
 - Routes requests to appropriate services and resources
 - Manages application context, authentication, and authorization
@@ -38,6 +38,7 @@ This is the Cloudflare Workers-based routing system that:
 3. **Consider Performance**: This is in the critical path for all apps
 4. **Maintain Compatibility**: Don't break existing URL patterns
 5. **Check Dependencies**: Understand what services this integrates with
+6. **Monitor Size**: Keep the built file under 32KB (currently at 27.43 KB)
 
 ### Common Development Commands
 
@@ -103,12 +104,36 @@ This router integrates with:
 3. Check for missing await statements (common async bug)
 4. Use console.log sparingly (performance impact)
 
+## Cloudflare Snippets vs Workers
+
+This project uses **Cloudflare Snippets**, NOT Workers. Key differences:
+
+### Snippets Limitations
+- **Maximum size: 32KB** (compressed)
+- **Current size: 27.43 KB** ⚠️ We're approaching the limit!
+- **Execution time: 5ms max**
+- **Memory: 2MB max**
+- **No async operations** in the main handler
+
+### Why Snippets?
+- Lightweight and fast for routing logic
+- Available on all Cloudflare plans at no extra cost
+- Perfect for header manipulation and request routing
+- Lower latency than Workers for simple operations
+
+### Documentation
+- [Cloudflare Snippets Overview](https://developers.cloudflare.com/rules/snippets/)
+- [Snippets General Availability Announcement](https://blog.cloudflare.com/snippets/)
+- [Snippets Troubleshooting](https://developers.cloudflare.com/rules/snippets/errors/)
+- [Snippets vs Workers Comparison](https://blog.cloudflare.com/snippets-announcement/)
+
 ## Deployment Notes
 
-- Deployed via Cloudflare Workers
-- Build outputs go to `dist/` directory
-- Deployment managed through separate repository (`ctx/runtime`)
-- Uses wrangler for Cloudflare deployment
+- Deployed via `cfsnip` tool (NOT wrangler)
+- Build outputs a minified JavaScript file
+- Must stay under 32KB size limit
+- Uses `just build serve_app` to build
+- Deploy with `cfsnip deploy serve_app.js`
 
 ## Remember
 

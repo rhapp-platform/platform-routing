@@ -1,0 +1,166 @@
+# Rhappsody Platform Routing Flow
+
+## URL Structure: `https://<ag>.rhapp.app/<an>/<sidecar>/<block>/<other>`
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                           INCOMING REQUEST: https://<ag>.rhapp.app/...                   │
+└─────────────────────────────────────────────┬───────────────────────────────────────────┘
+                                              │
+                                              ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    Parse URL Components                                  │
+│  • ag = hostname.split(".")[0]  (e.g., "bob" from bob.rhapp.app)                       │
+│  • [an, sidecar, block, other] = pathname.split("/")                                   │
+└─────────────────────────────────────────────┬───────────────────────────────────────────┘
+                                              │
+                                              ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                              LEVEL 1: Special System Routes                              │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                          │
+│  ┌─────────────┐     ┌──────────────┐     ┌──────────────┐                            │
+│  │ cf-fonts    │     │ _ (runtime)  │     │ _doc (docs)  │                            │
+│  │ → CF proxy  │     │ → rh.rhap.cc │     │ → doc.rhap.cc│                            │
+│  └─────────────┘     └──────────────┘     └──────────────┘                            │
+│                                                                                          │
+└─────────────────────────────────────────────┬───────────────────────────────────────────┘
+                                              │ (if not matched)
+                                              ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                           LEVEL 2: App Group (AG) Level Routes                           │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                          │
+│  ┌────────────────┐    ┌────────────────┐    ┌─────────────────┐    ┌───────────────┐ │
+│  │ /manifest      │    │ fn (CFN calls) │    │ rha (actions)   │    │ Static Files  │ │
+│  │ → JSON resp    │    │ → cfn-*.xpes   │    │ → rha-*.xpes    │    │ • rh.ico      │ │
+│  └────────────────┘    └────────────────┘    └─────────────────┘    │ • sw.js       │ │
+│                                                                       │ • _rhapp.js   │ │
+│                                                                       └───────────────┘ │
+│                                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
+│  │ Special AN Names: account, apps, auth, claim, create, dashboard, groups,         │  │
+│  │                   images, users, new, signup, used, visits                       │  │
+│  │ → app-sidecar.rhappsody.cloud/<an>/                                             │  │
+│  └──────────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                          │
+└─────────────────────────────────────────────┬───────────────────────────────────────────┘
+                                              │ (if not special AN)
+                                              ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                               LEVEL 3: Fetch App Context (CTX)                           │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                          │
+│  Fetch: https://ctx.rhap.cc/<ag>/<an>/app.ctx                                          │
+│  → If 404: Return styled HTML 404 page (render404)                                     │
+│  → Extract context from Content-Type header:                                           │
+│    • account, aid, brand, color, lang, name                                            │
+│    • sysStatus, status, version, pl, reg, exp, nbf                                     │
+│                                                                                          │
+└─────────────────────────────────────────────┬───────────────────────────────────────────┘
+                                              │ (context loaded)
+                                              ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                          LEVEL 4: App-Level Sidecar Routes                               │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                          │
+│  If sidecar exists in URL:                                                              │
+│                                                                                          │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌───────────────────┐    │
+│  │ _ctx         │    │ icon/banner/ │    │ rhapp.js     │    │ rha/<action>      │    │
+│  │ → JSON ctx   │    │ social       │    │ → app.js     │    │ → rha-*.xpes      │    │
+│  └──────────────┘    │ → SB storage │    │   from R2    │    │   + context       │    │
+│                       └──────────────┘    └──────────────┘    └───────────────────┘    │
+│                                                                                          │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌───────────────────┐    │
+│  │ fn/<cfn>     │    │ go/<block>   │    │ as           │    │ img/<name>        │    │
+│  │ → cfn-*.xpes │    │ → startBlock │    │ → serve-as   │    │ → R2 images       │    │
+│  └──────────────┘    └──────────────┘    └──────────────┘    └───────────────────┘    │
+│                                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
+│  │ Sidecar Pages: is, app, source, data, edit, images, assets, overview, users,     │  │
+│  │                share, install, info, profile, admin, login, inbox, splash,       │  │
+│  │                plugins, publish, contact, _dev, help, ask, chat, blog, files     │  │
+│  │ → app-sidecar.rhappsody.cloud/<sidecar>/<block>.html                            │  │
+│  └──────────────────────────────────────────────────────────────────────────────────┘  │
+│                                                                                          │
+└─────────────────────────────────────────────┬───────────────────────────────────────────┘
+                                              │ (no sidecar)
+                                              ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                           LEVEL 5: App Status & Access Checks                            │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                          │
+│  1. System Status Check                                                                  │
+│     ┌─────────────────┐                                                                 │
+│     │ sysStatus !== 0 │ → Return error                                                  │
+│     └─────────────────┘                                                                 │
+│                                                                                          │
+│  2. App Status Check                                                                     │
+│     ┌─────────────────┐                                                                 │
+│     │ status === 1    │ → Inactive/Password protected                                   │
+│     └─────────────────┘    → serve-app-as.xpes.workers.dev/protected                   │
+│                                                                                          │
+│  3. Preview Mode Check (?preview)                                                       │
+│     ┌─────────────────┐    ┌──────────────┐                                           │
+│     │ pl < 10         │ →  │ Not supported│                                           │
+│     └─────────────────┘    └──────────────┘                                           │
+│     Otherwise → app-sidecar.rhappsody.cloud/preview/                                   │
+│                                                                                          │
+│  4. Time-Based Access (non-preview only)                                               │
+│     ┌─────────────────┐                                                                 │
+│     │ nbf check       │ → If not live yet → renderLiveIn()                             │
+│     └─────────────────┘                                                                 │
+│     ┌─────────────────┐                                                                 │
+│     │ exp check       │ → If expired → renderExpired() [commented out]                 │
+│     └─────────────────┘                                                                 │
+│                                                                                          │
+└─────────────────────────────────────────────┬───────────────────────────────────────────┘
+                                              │ (all checks pass)
+                                              ▼
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                              LEVEL 6: Render Application                                 │
+├─────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                          │
+│  renderApp({                                                                             │
+│    ag,         // app group                                                             │
+│    an,         // app name                                                              │
+│    aid,        // app id                                                                │
+│    reg,        // region                                                                │
+│    pl,         // plan level                                                            │
+│    color,      // theme color                                                           │
+│    lang,       // language                                                              │
+│    b64,        // base64 app binary                                                     │
+│    startBlock, // starting block (default: "start", override with /go/<block>)          │
+│    version     // app version                                                           │
+│  })                                                                                      │
+│                                                                                          │
+│  → Returns HTML response with Content-Type: text/html; charset=utf-8                    │
+│                                                                                          │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+## Query Parameters
+
+• ?latest    → Forces latest version (adds timestamp)
+• ?preview   → Preview mode (requires pl >= 10)
+• ?oldversion → Uses previous.rhbin instead of app.rhbin
+• ?pw=...    → Password for protected apps
+• ?role=...  → Role for "as" functionality
+
+## Key External Services
+
+1. **CloudFlare (CF)**: Font optimization, CDN
+2. **Supabase (SB)**: Storage for images at sb.rhap.cc
+3. **Context Service**: App metadata at ctx.rhap.cc
+4. **Runtime Services**: rh.rhap.cc, doc.rhap.cc
+5. **Workers**: cfn-*.xpes.workers.dev, rha-*.xpes.workers.dev
+6. **Sidecar**: app-sidecar.rhappsody.cloud
+7. **R2 Storage**: pub-{reg}.rhap.cc for app binaries
+
+## CORS Headers
+
+Applied to various responses:
+- Access-Control-Allow-Origin: *
+- Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+- Access-Control-Allow-Headers: Content-Type, Authorization, X-Client-ID, rh-tag
+```
