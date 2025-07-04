@@ -45,6 +45,7 @@ export default {
     const url = new URL(request.url);
     const ag = url.hostname.split(".")[0];
     const [, an, sidecar, block, other] = url.pathname.split("/");
+    
 
     // ═══════════════════════════════════════════════════════════════════════════════════════════
     // LEVEL 1: SPECIAL SYSTEM ROUTES
@@ -67,9 +68,19 @@ export default {
 
     // ──────────────────────────────────────
     // __ → release.rhapp.cc (R2 releases)
+    // With ?release= param: replace first path segment
     // ──────────────────────────────────────
     if (an === "__") {
-      const releasePath = url.pathname.replace("/__/", "");
+      const releaseParam = url.searchParams.get("release");
+      let releasePath = url.pathname.replace("/__/", "");
+      
+      if (releaseParam) {
+        // Replace the first path segment with the release parameter
+        const pathSegments = releasePath.split("/");
+        pathSegments[0] = releaseParam; // Replace first segment
+        releasePath = pathSegments.join("/");
+      }
+      
       return fetch(`https://release.rhapp.cc/${releasePath}`);
     }
 
@@ -101,13 +112,32 @@ export default {
 
     // ──────────────────────────────────────
     // Static File Proxying (fetched from external sources)
-    // • rh.ico → Supabase storage
+    // • rh.ico → Custom AG icon or default
     // • sw.js → release.rhapp.cc (must be root-level for full domain scope)
     // ──────────────────────────────────────
-    if (an === "rh.ico")
-      return fetch(
-        `https://sb.rhap.cc/storage/v1/object/public/apps/_system/ico/blue.ico`
-      );
+    if (an === "rh.ico") {
+      // First try custom AG icon
+      const customIcoResponse = await fetch(`https://ico.rhappsody.cloud/${ag}.ico`);
+      
+      if (customIcoResponse.ok) {
+        // Return custom icon if found
+        return customIcoResponse;
+      } else {
+        // Return default creamsicle orange icon as inline SVG
+        const defaultIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+          <rect x="0" y="0" width="32" height="32" rx="6" ry="6" fill="#FF8C42"/>
+          <text x="16" y="23" font-family="Arial, sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="white">rh</text>
+        </svg>`;
+        
+        // Convert SVG to PNG-like format for better browser compatibility
+        return new Response(defaultIconSvg, {
+          headers: {
+            "Content-Type": "image/svg+xml",
+            "Cache-Control": "public, max-age=3600"
+          }
+        });
+      }
+    }
     if (an === "sw.js")
       return fetch(`https://release.rhapp.cc/sw.js`);
 

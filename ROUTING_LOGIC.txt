@@ -20,9 +20,11 @@
 ├─────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                          │
 │  ┌─────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────────┐   │
-│  │ cf-fonts    │     │ _ (runtime)  │     │ doc (docs)   │     │ __ (release)     │   │
+│  │ cf-fonts    │     │ _ (runtime)  │     │ doc (docs)   │     │ __ (release) ¹   │   │
 │  │ → CF proxy  │     │ → rh.rhap.cc │     │ → agdoc...   │     │ → release.rhapp.cc│   │
 │  └─────────────┘     └──────────────┘     └──────────────┘     └──────────────────┘   │
+│                                                                                          │
+│  ¹ With ?release=X param: replaces first path segment with X                            │
 │                                                                                          │
 └─────────────────────────────────────────────┬───────────────────────────────────────────┘
                                               │ (if not matched)
@@ -146,6 +148,7 @@
 • ?oldversion → Uses previous.rhbin instead of app.rhbin
 • ?pw=...    → Password for protected apps
 • ?role=...  → Role for "as" functionality
+• ?release=... → For "__" routes: replaces first path segment with release value
 
 ## Key External Services
 

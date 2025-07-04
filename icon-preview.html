@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Preview - rh.ico</title>
+    <link rel="icon" href="https://test.rhapp.app/rh.ico">
+    <link rel="shortcut icon" href="https://test.rhapp.app/rh.ico">
+    <link rel="apple-touch-icon" href="https://test.rhapp.app/rh.ico">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 40px;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin-top: 0;
+            color: #333;
+        }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        .preview-item {
+            text-align: center;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 4px;
+        }
+        .preview-item img {
+            display: block;
+            margin: 0 auto 10px;
+        }
+        .preview-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+        .dark-bg {
+            background: #222;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Icon Preview: rh.ico</h1>
+        <p>Source: <code>https://test.rhapp.app/rh.ico</code></p>
+        
+        <div class="preview-grid">
+            <div class="preview-item">
+                <img src="https://test.rhapp.app/rh.ico" width="16" height="16" alt="16x16">
+                <div class="preview-label">16x16</div>
+            </div>
+            
+            <div class="preview-item">
+                <img src="https://test.rhapp.app/rh.ico" width="32" height="32" alt="32x32">
+                <div class="preview-label">32x32</div>
+            </div>
+            
+            <div class="preview-item">
+                <img src="https://test.rhapp.app/rh.ico" width="48" height="48" alt="48x48">
+                <div class="preview-label">48x48</div>
+            </div>
+            
+            <div class="preview-item">
+                <img src="https://test.rhapp.app/rh.ico" width="64" height="64" alt="64x64">
+                <div class="preview-label">64x64</div>
+            </div>
+            
+            <div class="preview-item">
+                <img src="https://test.rhapp.app/rh.ico" width="128" height="128" alt="128x128">
+                <div class="preview-label">128x128</div>
+            </div>
+            
+            <div class="preview-item dark-bg">
+                <img src="https://test.rhapp.app/rh.ico" width="64" height="64" alt="On dark">
+                <div class="preview-label">On dark background</div>
+            </div>
+        </div>
+        
+        <h2 style="margin-top: 40px;">As Favicon</h2>
+        <p>Check the browser tab to see how it looks as a favicon.</p>
+    </div>
+</body>
+</html>
