@@ -1,7 +1,7 @@
 import renderApp from "./renderApp";
 import renderLiveIn from "./renderLiveIn";
 import renderExpired from "./renderExpired";
-import renderManifest from "./renderManifest";
+import renderManifest from "./renderManifest.generated";
 import render404 from "./render404";
 import renderSuspended from "./renderSuspended";
 
@@ -100,14 +100,13 @@ export default {
     // /manifest → JSON response
     // ──────────────────────────────────────
     if (url.pathname.endsWith("/manifest")) {
-      return new Response(
-        JSON.stringify(renderManifest({ ag, an, name: an, color: "blue" })),
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      // Use the generated manifest function (built from template at build time)
+      const manifestJson = renderManifest({ ag, an, color: "blue" });
+      return new Response(manifestJson, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
     }
 
     // ──────────────────────────────────────
@@ -141,6 +140,13 @@ export default {
     if (an === "sw.js")
       return fetch(`https://release.rhapp.cc/sw.js`);
 
+
+    // ──────────────────────────────────────
+    // ai → {ag}.rhapp.ai
+    // ──────────────────────────────────────
+    if (an === "ai") {
+      return fetch(`https://${ag}.rhapp.ai`);
+    }
 
     // ──────────────────────────────────────
     // Special AN Names → app-sidecar.rhappsody.cloud/<an>/

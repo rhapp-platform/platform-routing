@@ -13,6 +13,10 @@ show recipe:
 # Build a TypeScript file from src directory (minified)
 alias b := build
 build name:
+    @if [ "{{name}}" = "serve_app" ]; then \
+        echo "Generating manifest template..."; \
+        bun run scripts/generate-manifest.ts; \
+    fi
     bun build src/{{name}}.ts --minify --outfile={{name}}.js
 
 # Build serve_app.ts (the critical platform routing component)

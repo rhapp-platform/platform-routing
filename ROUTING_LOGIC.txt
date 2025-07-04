@@ -35,10 +35,15 @@
 │                                                                                          │
 │  ┌────────────────┐    ┌────────────────┐    ┌─────────────────┐    ┌───────────────┐ │
 │  │ /manifest      │    │ fn (CFN calls) │    │ rha (actions)   │    │ File Proxying │ │
-│  │ → JSON resp    │    │ → cfn-*.xpes   │    │ → rha-*.xpes    │    │ • rh.ico      │ │
+│  │ → JSON resp    │    │ → cfn-*.xpes   │    │ → rha-*.xpes    │    │ • rh.ico ²    │ │
 │  └────────────────┘    └────────────────┘    └─────────────────┘    │ • sw.js ¹     │ │
 │                                                                       └───────────────┘ │
 │  ¹ sw.js served from release.rhapp.cc, root path for full domain scope                 │
+│  ² rh.ico checks ico.rhappsody.cloud/{ag}.ico first, falls back to default             │
+│                                                                                          │
+│  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
+│  │ ai → {ag}.rhapp.ai                                                              │  │
+│  └──────────────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                          │
 │  ┌──────────────────────────────────────────────────────────────────────────────────┐  │
 │  │ Special AN Names: account, apps, auth, claim, create, dashboard, groups,         │  │
