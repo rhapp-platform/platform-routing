@@ -3,6 +3,7 @@ import renderLiveIn from "./renderLiveIn";
 import renderExpired from "./renderExpired";
 import renderManifest from "./renderManifest";
 import render404 from "./render404";
+import renderSuspended from "./renderSuspended";
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════════
 // CONSTANTS AND CONFIGURATION
@@ -498,10 +499,16 @@ export default {
     
     // ──────────────────────────────────────
     // 1. System Status Check
-    // sysStatus !== 0 → Return error
+    // sysStatus !== 0 → Return styled suspension page
     // ──────────────────────────────────────
-    if (sysStatus !== "0") 
-      return new Response(`sysStatus = ${sysStatus}`);
+    if (sysStatus !== "0") {
+      return new Response(renderSuspended({ ag, an, sysStatus }), {
+        status: 503,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+        },
+      });
+    }
 
     // ──────────────────────────────────────
     // 2. App Status Check  
