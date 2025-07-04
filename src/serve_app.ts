@@ -73,11 +73,11 @@ export default {
     }
 
     // ──────────────────────────────────────
-    // _doc (docs) → doc.rhap.cc
+    // doc (docs) → agdoc.rhappsody.com
     // ──────────────────────────────────────
-    if (an === "_doc") {
-      const docPath = url.pathname.replace("/_doc/", "");
-      return fetch(`https://doc.rhap.cc/${docPath}`);
+    if (an === "doc") {
+      const docPath = url.pathname.replace("/doc/", "");
+      return fetch(`https://agdoc.rhappsody.com/${docPath}`);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -248,6 +248,13 @@ export default {
 
     if (sidecar) {
       switch (sidecar) {
+        // ──────────────────────────────────────
+        // doc → appdoc.rhappsody.com
+        // ──────────────────────────────────────
+        case "doc":
+          const docBlockPath = block ? `${block}.html` : "index.html";
+          return fetch(`https://appdoc.rhappsody.com/${docBlockPath}`);
+        
         // ──────────────────────────────────────
         // _ctx → JSON context
         // ──────────────────────────────────────
