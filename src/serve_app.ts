@@ -65,10 +65,10 @@ export default {
     }
 
     // ──────────────────────────────────────
-    // release → release.rhapp.cc (R2 releases)
+    // __ → release.rhapp.cc (R2 releases)
     // ──────────────────────────────────────
-    if (an === "release") {
-      const releasePath = url.pathname.replace("/release/", "");
+    if (an === "__") {
+      const releasePath = url.pathname.replace("/__/", "");
       return fetch(`https://release.rhapp.cc/${releasePath}`);
     }
 
@@ -290,23 +290,6 @@ export default {
           const socialPath = `https://sb.rhap.cc/storage/v1/object/public/apps/${account}/${aid}/social.png`;
           return fetch(socialPath);
 
-        // ──────────────────────────────────────
-        // rhapp.js → app.js from R2
-        // ──────────────────────────────────────
-        case "rhapp.js":
-          const appBinPath = `https://pub-${reg}.rhap.cc/${account}/${aid}/app.js`;
-          const appBin = await fetch(appBinPath);
-          const corsHeaders = {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
-          };
-          return new Response(appBin.body, {
-            headers: {
-              ...corsHeaders,
-              ...appBin.headers,
-            },
-          });
         // ──────────────────────────────────────
         // rha/<action> → rha-*.xpes.workers.dev + context
         // ──────────────────────────────────────

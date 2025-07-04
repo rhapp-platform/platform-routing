@@ -20,7 +20,7 @@
 ├─────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                          │
 │  ┌─────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────────┐   │
-│  │ cf-fonts    │     │ _ (runtime)  │     │ _doc (docs)  │     │ release          │   │
+│  │ cf-fonts    │     │ _ (runtime)  │     │ _doc (docs)  │     │ __ (release)     │   │
 │  │ → CF proxy  │     │ → rh.rhap.cc │     │ → doc.rhap.cc│     │ → release.rhapp.cc│   │
 │  └─────────────┘     └──────────────┘     └──────────────┘     └──────────────────┘   │
 │                                                                                          │
@@ -66,11 +66,11 @@
 │                                                                                          │
 │  If sidecar exists in URL:                                                              │
 │                                                                                          │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌───────────────────┐    │
-│  │ _ctx         │    │ icon/banner/ │    │ rhapp.js     │    │ rha/<action>      │    │
-│  │ → JSON ctx   │    │ social       │    │ → app.js     │    │ → rha-*.xpes      │    │
-│  └──────────────┘    │ → SB storage │    │   from R2    │    │   + context       │    │
-│                       └──────────────┘    └──────────────┘    └───────────────────┘    │
+│  ┌──────────────┐    ┌──────────────┐    ┌───────────────────┐                        │
+│  │ _ctx         │    │ icon/banner/ │    │ rha/<action>      │                        │
+│  │ → JSON ctx   │    │ social       │    │ → rha-*.xpes      │                        │
+│  └──────────────┘    │ → SB storage │    │   + context       │                        │
+│                       └──────────────┘    └───────────────────┘                        │
 │                                                                                          │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌───────────────────┐    │
 │  │ fn/<cfn>     │    │ go/<block>   │    │ as           │    │ img/<name>        │    │
@@ -153,7 +153,7 @@
 2. **Supabase (SB)**: Storage for images at sb.rhap.cc
 3. **Context Service**: App metadata at ctx.rhap.cc
 4. **Runtime Services**: rh.rhap.cc, doc.rhap.cc
-5. **Release Service**: release.rhapp.cc for versioned platform releases & service worker
+5. **Release Service**: release.rhapp.cc for versioned platform releases & service worker (accessed via `__`)
 6. **Workers**: cfn-*.xpes.workers.dev, rha-*.xpes.workers.dev
 7. **Sidecar**: app-sidecar.rhappsody.cloud
 8. **R2 Storage**: pub-{reg}.rhap.cc for app binaries

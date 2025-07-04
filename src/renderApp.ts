@@ -11,6 +11,7 @@ interface RenderAppProps {
   color: string;
   startBlock: string;
   version: string;
+  includeServiceWorker?: boolean;
 }
 
 import genContextToken from "./genContextToken";
@@ -27,6 +28,7 @@ export default async function renderApp({
   version,
   b64,
   startBlock,
+  includeServiceWorker = false,
 }: RenderAppProps) {
   const { contextToken, sid } = await genContextToken({
     ag,
@@ -68,6 +70,7 @@ export default async function renderApp({
     <link rel="stylesheet" href="${cssUrl}">
     <!-- JS library with async loading -->
     <script async src="${jsUrl}"></script>
+    ${includeServiceWorker ? '<!-- Service Worker -->\n    <script src="/sw.js"></script>' : ''}
     <!-- <script async src="/fn/ag-visit?sid=${sid}&an=${an}"></script> -->
     <!-- Your app initialization script -->
     <script>
